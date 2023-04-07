@@ -38,61 +38,129 @@ public_users.post("/register", (req,res) => {
   else{
     return res.status(400).json(`user ${username} already exists.`);		 
   }
-  
-
 });
+
+// Promise function for get all books.
+function getBooks(){
+  return new Promise((resolve,reject)=>{
+	let bookList = Object.values(books) 
+    if (bookList.length>0){
+	  resolve(bookList);
+	}
+	else{
+	  reject(new Error("No books!"))
+	}
+  })
+}
 
 // Get the book list available in the shop
 public_users.get('/',function (req, res) {
-  return res.status(300).json(books);
+  getBooks()
+  .then(data => {
+    return res.status(300).json(data);  
+  })
+  .catch(error => {
+    return res.status(404).json({message:error.message}) 
+  });
+
 });
+
+// Promise function for return a book based on isbn.
+function getBook(isbn){
+  return new Promise((resolve,reject)=>{
+	let Book;
+	for (let isbN in Object.keys(books)){
+      if (isbN === isbn){
+		Book = books[isbn];
+      }
+    }
+	if (Book){
+	  resolve(Book);		
+	}
+	else{
+	  reject(new Error(`No book found for that isbn ${isbn}.`));
+	}
+  })
+}
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
   const isbn = req.params.isbn;
-  for (book in books){
-    if (book === isbn){
-      return res.status(300).json(books[book]);
-    }
-  }
-  return res.status(300).json({message: "Invalid ISBN"});
- });
+  getBook(isbn)
+  .then(data => {
+    return res.status(300).json(data);  
+  })
+  .catch(error => {
+    return res.status(404).json({message:error.message}) 
+  });
+});
   
+ 
+ 
+  
+// Promise function for return books based on author.
+function getAuthorBooks(author){
+  return new Promise((resolve,reject)=>{
+	let bookList = Object.values(books); 
+	let authorBooks = [];
+	for (isbN in bookList){
+	  book = bookList[isbN];
+      if (book["author"] === author){
+		authorBooks.push(book);
+      }
+    }
+	if (authorBooks.length>0){
+	  resolve(authorBooks);		
+	}
+	else{
+	  reject(new Error(`The author ${author} doesn't have any books.`));
+	}
+  })
+}  
+ 
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
   const author = req.params.author;
-  authorBooks = []
-  for (bookNum in books){
-	  chBook = books[bookNum];
-	  if (chBook.author === author){
-		  authorBooks.push(chBook);
-	  }
-  }
-  if (authorBooks.length > 0){
-    return res.status(300).json(authorBooks);
-  }
-  else{
-      return res.status(300).json(`The author ${author} doesn't have any books.`);
-  }
-
+  getAuthorBooks(author)
+  .then(data => {
+    return res.status(300).json(data);
+  })
+  .catch(error => {
+    return res.status(404).json({message:error.message});
+  });
 });
+
+
+// Promise function for return books based on title.
+function getTitleBooks(title){
+  return new Promise((resolve,reject)=>{
+	let bookList = Object.values(books); 
+	let titleBooks = [];
+	for (isbN in bookList){
+	  book = bookList[isbN];
+      if (book["title"] === title){
+		titleBooks.push(book);
+      }
+    }
+	if (titleBooks.length>0){
+	  resolve(titleBooks);		
+	}
+	else{
+	  reject(new Error(`No book has the title ${title}.`));
+	}
+  })
+} 
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
   const title = req.params.title;
-  titleBooks = []
-  for (bookNum in books){
-	  chBook = books[bookNum];
-	  if (chBook.title === title){
-		  titleBooks.push(chBook);
-	  }
-  }
-  if (titleBooks.length > 0){
-    return res.status(300).json(titleBooks);
-  }
-  else{
-      return res.status(300).json(`Any doesn't have the title ${title}.`);
-  }
+  getTitleBooks(title)
+  .then(data => {
+    return res.status(300).json(data);
+  })
+  .catch(error => {
+    return res.status(404).json({message:error.message});
+  });
 });
 
 //  Get book review
